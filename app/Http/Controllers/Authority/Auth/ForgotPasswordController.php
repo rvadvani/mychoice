@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Authority\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends Controller
 {
@@ -27,6 +29,24 @@ class ForgotPasswordController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest');
+        $this->middleware('guest:owner');
+    }
+
+    public function broker()
+    {
+        return Password::broker('owners');
+    }
+
+    public function showLinkRequestForm()
+    {
+        return view('authority.auth.passwords.email');
+    }
+
+    public function sendResetLinkEmail(Request $request)
+    {
+        $this->validateEmail($request);
+        $response = $this->broker()->sendResetLink($request->only('email'));
+
+        return $response == Password::RESET_LINK_SENT ? $this->sendResetLinkResponse($response) : $this->sendResetLinkFailedResponse($request, $response);
     }
 }
